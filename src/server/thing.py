@@ -31,6 +31,8 @@ class Node:
         self.c = node
 
 def runVote(objnode):
+
+    begin_es = datetime.now()
     
     print(objnode.text, end="\n")
     
@@ -40,7 +42,7 @@ def runVote(objnode):
     b=0
     c=0
     messages = client.messages.list(
-                                date_sent=datetime.now()-10;
+                                date_sent=begin_es,
                                 limit=30
                             )
     for record in messages:
