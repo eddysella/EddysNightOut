@@ -13,9 +13,9 @@ auth_token = 'your_auth_token'
 client = Client(account_sid, auth_token)
 
 class Node:
-    a = null
-    b = null
-    c = null
+    a = None
+    b = None
+    c = None
     text = " "
 
     def __init__(self, text):
