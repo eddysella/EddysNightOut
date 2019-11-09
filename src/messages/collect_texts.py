@@ -2,8 +2,8 @@ from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 
 
-account_sid = 'AC7129f692edfb436fe3827c984d535d69'
-auth_token = 'e5f94e6cd91d078f6f44e64a67b4699f'
+account_sid = ''
+auth_token = ''
 
 
 app = Flask(__name__)
