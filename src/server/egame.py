@@ -25,7 +25,9 @@ def sms_ahoy_reply():
 
 def run_vote(tree, curr, nodes):
     if tree.get(curr).jump:
-        return nodes
+        for line in tree.get(curr).text:
+            print(line)
+        return nodes, tree.get(nodes).next_nodes
     else:
         print(tree.get(curr).label)
         for line in tree.get(curr).text:
@@ -34,7 +36,8 @@ def run_vote(tree, curr, nodes):
         for node in nodes:
             counters[node] = 0
             print(tree.get(node).label)
-        time.sleep(10)
+
+    time.sleep(15)
 
     for record in num_reply:
         for option in nodes:
@@ -46,13 +49,15 @@ def run_vote(tree, curr, nodes):
 
     if total == 0:
         print("Nobody voted.\n")
-        return curr
+        return curr, nodes
     else:
         print(total, " people voted.\n")
         for option in nodes:
             print("%0.2f" % (counters[option] / total * 100), "%% voted OPTION", option, " \n")
 
-    return max(counters.items(), key=operator.itemgetter(1))[0]
+    next = max(counters.items(), key=operator.itemgetter(1))[0]
+
+    return next, tree.get(next).next_nodes
 
 
 def create_tree(filepath):
@@ -105,7 +110,7 @@ def create_tree(filepath):
             # Display Node
             # Format: Op Node [Children]
             if len(split[0]) > 6:
-                tree[children[1]] = (Node(split[1], text, children[1], False, children[1:]))
+                tree[children[1]] = (Node(split[1], text, children[1], False, children[2:]))
 
             # Jump Node
             # Format: Op Node Jump
@@ -125,12 +130,12 @@ class Game(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
-        
         story_tree = create_tree(sys.argv[1])
         curr = story_tree.get('0').node
+        next_node = story_tree.get('0').next_nodes
 
         while curr is not None:
-            curr = run_vote(story_tree, curr, story_tree.get(curr).next_nodes)
+            curr, next_node = run_vote(story_tree, curr, next_node)
 
 
 if __name__ == "__main__":
