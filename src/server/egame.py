@@ -1,5 +1,3 @@
-import operator
-
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 import time
@@ -24,13 +22,15 @@ def sms_ahoy_reply():
 
 
 def run_vote(story, index):
-
     currnode = story[index]
 
     # each line in currnode's text description, a list of strings
     for line in currnode.text:
         print(line)
 
+    if len(currnode.next_nodes)==1:
+        time.sleep(5)
+        return currnode.next_nodes[0]
     options = dict()
     print("Options are: ")
     # all the options for my current node
@@ -39,10 +39,10 @@ def run_vote(story, index):
         options[optionIndex] = 0
 
     time.sleep(15)
-    
+
     for vote in num_reply.values():
         if vote in options:
-            options[vote] = options[vote]+1
+            options[vote] = options[vote] + 1
 
     num_reply.clear()
 
@@ -58,6 +58,7 @@ def run_vote(story, index):
         print("%0.2f" % (options[key] / total * 100), "%% voted OPTION", key, ".")
 
     return max(options, key=lambda key: options[key])
+
 
 def create_tree(filepath):
     tree = {}
@@ -129,8 +130,9 @@ class Game(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
-        story_tree = create_tree(sys.argv[1])
+        story = create_tree("Storyline")
         curr = '0'
+
         while story[curr].next_nodes is not None:
             curr = run_vote(story, curr)
 
