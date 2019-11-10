@@ -23,42 +23,41 @@ def sms_ahoy_reply():
     return str(resp)
 
 
-def run_vote(tree, curr, nodes):
-    if tree.get(curr).jump:
-        for line in tree.get(curr).text:
-            print(line)
-        return nodes, tree.get(nodes).next_nodes
-    else:
-        print(tree.get(curr).label)
-        for line in tree.get(curr).text:
-            print(line)
-        counters = {}
-        for node in nodes:
-            counters[node] = 0
-            print(tree.get(node).label)
+def run_vote(story, index):
+
+    currnode = story[index]
+
+    # each line in currnode's text description, a list of strings
+    for line in currnode.text:
+        print(line)
+
+    options = dict()
+    print("Options are: ")
+    # all the options for my current node
+    for optionIndex in currnode.next_nodes:
+        print(optionIndex, " ", story[optionIndex].label)
+        options[optionIndex] = 0
 
     time.sleep(15)
-
-    for record in num_reply:
-        for option in nodes:
-            if num_reply[record] == option:
-                counters[option] += counters[option] + 1
+    
+    for vote in num_reply.values():
+        if vote in options:
+            options[vote] = options[vote]+1
 
     num_reply.clear()
-    total = sum(counters.values())
 
+    total = sum(options.values())
     if total == 0:
-        print("Nobody voted.\n")
-        return curr, nodes
-    else:
-        print(total, " people voted.\n")
-        for option in nodes:
-            print("%0.2f" % (counters[option] / total * 100), "%% voted OPTION", option, " \n")
+        print("Nobody voted.")
+        return index
 
-    next = max(counters.items(), key=operator.itemgetter(1))[0]
+    # at this point, total cannot be zero
+    print(total, " people voted.")
 
-    return next, tree.get(next).next_nodes
+    for key in options:
+        print("%0.2f" % (options[key] / total * 100), "%% voted OPTION", key, ".")
 
+    return max(options, key=lambda key: options[key])
 
 def create_tree(filepath):
     tree = {}
@@ -131,11 +130,9 @@ class Game(threading.Thread):
 
     def run(self):
         story_tree = create_tree(sys.argv[1])
-        curr = story_tree.get('0').node
-        next_node = story_tree.get('0').next_nodes
-
-        while curr is not None:
-            curr, next_node = run_vote(story_tree, curr, next_node)
+        curr = '0'
+        while story[curr].next_nodes is not None:
+            curr = run_vote(story, curr)
 
 
 if __name__ == "__main__":
