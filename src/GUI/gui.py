@@ -1,9 +1,6 @@
 from tkinter import *
 from tkinter.ttk import *
 
-frames = []
-widgets = []
-
 window = Tk()
 window.title("Welcome to Story Creation")
 window.resizable(height=None, width=None)
@@ -16,8 +13,24 @@ window.resizable(height=None, width=None)
 # create start button at top
 # if time permits create save/load feature
 
-def addOption():
+class Option:
+    frames = []
+    widgets = []
 
+    frames.append(Frame(window, borderwidth=2, relief="groove"))
+
+    widgets.append(Entry(frames[0]))
+
+    combo = Combobox(window)
+    combo['values'] = [i for i in range(0, 101, 1)]
+    widgets.append(combo)
+
+    widgets[0].pack(side="left")
+    widgets[0].pack(side="right")
+
+
+
+def addOption():
     frame = Frame(window, borderwidth=2, relief="groove")
     frames.append(frame)
 
