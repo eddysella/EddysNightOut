@@ -4,14 +4,12 @@
 from datetime import datetime
 from twilio.rest import Client
 import time
-#from src.messages.send_sms import *
-from src.messages.collect_texts import *
-# num_reply
+
 
 # Your Account Sid and Auth Token from twilio.com/console
 # DANGER! This is insecure. See http://twil.io/secure
-# account_sid = 'ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-# auth_token = 'your_auth_token'
+account_sid = 'ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+auth_token = 'your_auth_token'
 client = Client(account_sid, auth_token)
 
 class Node:
@@ -22,7 +20,7 @@ class Node:
 
     def __init__(self, text):
         self.text = text
-
+    
     def setNodeA(self, node):
         self.a = node
 
@@ -31,7 +29,6 @@ class Node:
 
     def setNodeC(self, node):
         self.c = node
-
 
 def runVote(objnode):
 
@@ -45,15 +42,15 @@ def runVote(objnode):
     b=0
     c=0
     messages = client.messages.list(
-                                 date_sent=begin_es,
-                                 limit=30
-                             )
-    for num in num_reply:
-        if (num_reply[num] == '1'):
+                                date_sent=begin_es,
+                                limit=30
+                            )
+    for record in messages:
+        if (record.body == '1'):
             a += 1
-        elif (num_reply[num]== '2'):
+        elif (record.body == '2'):
             b += 1
-        elif (num_reply[num] == '3'):
+        elif (record.body == '3'):
             c += 1
 
     sum = a+b+c
@@ -93,6 +90,4 @@ def main():
     while (curr is not None):
         curr = runVote(curr)
 
-if __name__ == "__main__":
-    main()
 

@@ -1,94 +1,144 @@
-#! /usr/bin/python3
+import operator
 
-# Download the helper library from https://www.twilio.com/docs/python/install
-from datetime import datetime
-from twilio.rest import Client
+from flask import Flask, request
+from twilio.twiml.messaging_response import MessagingResponse
 import time
-
 import threading
+import sys
+import os
 
-# Your Account Sid and Auth Token from twilio.com/console
-# DANGER! This is insecure. See http://twil.io/secure
-account_sid = 'ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-auth_token = 'your_auth_token'
-client = Client(account_sid, auth_token)
+# twilio phone-numbers:update "+441732252343" --sms-url="http://localhost:5000/sms"
+# use code above to reset tunnel
+num_reply = dict()
+
+app = Flask(__name__)
+
+
+@app.route("/sms", methods=['GET', 'POST'])
+def sms_ahoy_reply():
+    resp = MessagingResponse()
+    num_reply[request.form['From']] = request.form['Body']
+    resp.message("Response Received")
+    # print(num_reply)
+    return str(resp)
+
+
+def run_vote(tree, curr, nodes):
+    if tree.get(curr).jump:
+        for line in tree.get(curr).text:
+            print(line)
+        return nodes, tree.get(nodes).next_nodes
+    else:
+        print(tree.get(curr).label)
+        for line in tree.get(curr).text:
+            print(line)
+        counters = {}
+        for node in nodes:
+            counters[node] = 0
+            print(tree.get(node).label)
+
+    time.sleep(15)
+
+    for record in num_reply:
+        for option in nodes:
+            if num_reply[record] == option:
+                counters[option] += counters[option] + 1
+
+    num_reply.clear()
+    total = sum(counters.values())
+
+    if total == 0:
+        print("Nobody voted.\n")
+        return curr, nodes
+    else:
+        print(total, " people voted.\n")
+        for option in nodes:
+            print("%0.2f" % (counters[option] / total * 100), "%% voted OPTION", option, " \n")
+
+    next = max(counters.items(), key=operator.itemgetter(1))[0]
+
+    return next, tree.get(next).next_nodes
+
+
+def create_tree(filepath):
+    tree = {}
+    story = []
+
+    class Node:
+        node = None
+        next_nodes = None
+        jump = False
+        text = ""
+        label = ""
+
+        def __init__(self, label, textField, node, jump, next_nodes=None):
+            self.next_nodes = next_nodes
+            self.jump = jump
+            self.node = node
+            self.text = textField
+            self.label = label
+
+    def collect_text(file_as_list, index):
+        y = index
+        collected_lines = []
+        while y < len(file_as_list) and not file_as_list[y].startswith('Op'):
+            collected_lines.append(file_as_list[y])
+            y += 1
+        return collected_lines
+
+    if not os.path.isfile(filepath):
+        print("File path {} does not exist. Exiting...".format(filepath))
+        sys.exit()
+
+    with open(filepath, 'r', encoding="utf8") as fp:
+        cnt = 0
+        for line in fp:
+            story.append(line)
+            cnt += 1
+
+    for i, line in enumerate(story):
+        if line is None:
+            None
+        elif line.startswith('Op'):
+            # Split into opcode + message
+            split = story[i].split(':')
+            # Collect text for the node
+            text = collect_text(story, i + 1)
+            # Collect connected nodes
+            children = split[0].split(' ')
+
+            # Display Node
+            # Format: Op Node [Children]
+            if len(split[0]) > 6:
+                tree[children[1]] = (Node(split[1], text, children[1], False, children[2:]))
+
+            # Jump Node
+            # Format: Op Node Jump
+            elif len(split[0]) == 6:
+                tree[children[1]] = Node(split[1], text, children[1], True, children[2])
+
+            # End node
+            # Format: Op Node None
+            else:
+                tree[children[1]] = Node(split[1], text, children[1], False)
+
+    return tree
+
 
 class Game(threading.Thread):
-    def __init__(self, *args, **kwargs):
-        super(MyThread, self).__init__(*args, **kwargs)
-    class Node:
-        a = None
-        b = None
-        c = None
-        text = " "
+    def __init__(self):
+        threading.Thread.__init__(self)
 
-        def __init__(self, text):
-            self.text = text
-        
-        def setNodeA(self, node):
-            self.a = node
+    def run(self):
+        story_tree = create_tree(sys.argv[1])
+        curr = story_tree.get('0').node
+        next_node = story_tree.get('0').next_nodes
 
-        def setNodeB(self, node):
-            self.b = node
-
-        def setNodeC(self, node):
-            self.c = node
-
-    def runVote(objnode):
-
-        begin_es = datetime.now()
-        
-        print(objnode.text, end="\n")
-        
-        time.sleep(10)
-
-        a=0
-        b=0
-        c=0
-    
-        for record in num_reply:
-            if (num_reply[record] == '1'):
-                a += 1
-            elif (num_reply[record] == '2'):
-                b += 1
-            elif (num_reply[record] == '3'):
-                c += 1
-
-        sum = a+b+c
-
-        print(sum, " people voted.\n");
-        print("%0.2f" % (a/sum * 100), "% voted OPTION 1\n")
-        print("%0.2f" % (b/sum * 100), "% voted OPTION 1\n")
-        print("%0.2f" % (c/sum * 100), "% voted OPTION 1\n")
-
-        if (a>b and a>c):
-            return objnode.a
-        elif (b>a and b>c):
-            return objnode.b
-        else:
-            return objnode.c
-
-    def run():
-
-        node = Node("I")
-        node.setNodeA(Node("am"))
-        node.a.setNodeA(Node("dead"))
-        node.a.setNodeB(Node("alive"))
-        node.a.setNodeC(Node("drunk"))
-
-        node.setNodeB(Node("have"))
-        node.b.setNodeA(Node("herpes"))
-        node.b.setNodeB(Node("nothing"))
-        node.b.setNodeC(Node("everything"))
-
-        node.setNodeC(Node("can"))
-        node.c.setNodeA(Node("fly"))
-        node.c.setNodeA(Node("poop"))
-        node.c.setNodeA(Node("giggle"))
-
-        curr = node
-
-        while (curr is not None):
-            curr = runVote(curr)
+        while curr is not None:
+            curr, next_node = run_vote(story_tree, curr, next_node)
 
 
+if __name__ == "__main__":
+    g = Game()
+    g.start()
+    app.run(debug=True)
