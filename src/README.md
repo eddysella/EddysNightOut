@@ -16,7 +16,8 @@ Op 1 2 creates a jump node which when accessed jumps directly from node 1 to nod
 Op 0 1 2 creates a parent node with index 0 who has two children, nodes 1 and 2.
 Op 0 3 4 creates a parent node with index 0 who has two children, nodes 3 and 4.
 
-Op 0: Label /n Text
+Op 0: Label 
+Text
 
   - Label is the title of the node
   - Text is the story/context that should accompany the node
